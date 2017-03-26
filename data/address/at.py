@@ -4,6 +4,9 @@
 
 import os
 CURRENT_DIRECTORY = os.path.split(os.path.realpath(__file__))[0]+'/'
+from hccrn import recognizer
+f = recognizer(*input_data.arguments['full'])
+k = recognizer(*input_data.arguments['kwd'])
 
 
 class node:
@@ -198,12 +201,14 @@ def validate(t, k_char_list, full_char_list, charlist):
 		while index < len(split_words_pos):
 			addresss = t.search(path).getchildren()
 			[min, max] = t.search(path).getlen()
-			word_len = split_words_pos[index][1]
-			while word_len < min and word_len > max:
-				split_words_pos[index][1] += split_words_pos[index+1][1]
+			init = index
+			word_len = split_words_pos[init][1]
+			start = split_words_pos[init][0]
+			index += 1
+			while word_len < min:
+				split_words_pos[init][1] += split_words_pos[index][1]
 				index += 1
-			start = split_words_pos[index][0]
-			end = start + split_words_pos[index][1]
+			end = start + split_words_pos[init][1]
 			word_char_list = f.recognize(charlist[start, end], input_data.full_list)
 			word = ''.join(word_char_list).encode('utf8')
 			addresssc = {}
@@ -213,7 +218,6 @@ def validate(t, k_char_list, full_char_list, charlist):
 				addresssc[sim] = x
 			address = addresssc[max(addresssc.keys())]
 			path.append(address)
-			index += 1
 		result = ''.join(path[1:]).encode('utf8')
 	except:
 		result = full_result
