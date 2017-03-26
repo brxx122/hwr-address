@@ -16,7 +16,17 @@ class node:
 
 	def getchildren(self):
 		return self._children
-
+	
+	def getlen(self):
+		min = 100
+		max = 0
+		for i in self._children:
+			if len(i) < min:
+				min = len(i)
+			if len(i) > max:
+				max = len(i)
+		return [min, max]
+	
 	def add(self, node):
 		self._children.append(node)
 
@@ -133,7 +143,7 @@ def generate_regular_address_string(want_num = 1000, file_path = './ra.txt', to_
 	with open(file_path, 'w') as f:
 		for i in addresses:
 			f.write(i.encode('utf8')+'\n')
-
+'''
 def validate(t, k_char_list, full_char_list):
 
 	import sys
@@ -141,6 +151,7 @@ def validate(t, k_char_list, full_char_list):
 	import tools
 	result = [full_char_list[i][0][0].decode('utf8') if k_char_list[i][0][0] == 'X' else k_char_list[i][0][0].decode('utf8') for i in range(len(full_char_list))]
 	full_result = ''.join(result).encode('utf8')
+	
 	try:
 		path = [u'中国']
 		index = 0
@@ -154,6 +165,55 @@ def validate(t, k_char_list, full_char_list):
 			address = addresssc[max(addresssc.keys())]
 			path.append(address)
 			index += len(address)
+		result = ''.join(path[1:]).encode('utf8')
+	except:
+		result = full_result
+
+	return (result, full_result)
+'''
+def validate(t, k_char_list, full_char_list, charlist):
+
+	import sys
+	sys.path.append('../../tools/')	
+	import tools
+	#result without address database
+	result = [full_char_list[i][0][0].decode('utf8') if k_char_list[i][0][0] == 'X' else k_char_list[i][0][0].decode('utf8') for i in range(len(full_char_list))]
+	full_result = ''.join(result).encode('utf8')
+	
+	#result with address database
+	split_words_pos = []
+	i = 0
+	while i < len(key_char_list):
+		j = i
+		cnt = 0
+		while key_char_list[j][0][0]=='X':
+			cnt += 1
+			j += 1
+		#include key words
+		split_words_pos.append([i, cnt+1])
+		i = j + 1
+	try:
+		path = [u'中国']
+		index = 0
+		while index < len(split_words_pos):
+			addresss = t.search(path).getchildren()
+			[min, max] = t.search(path).getlen()
+			word_len = split_words_pos[index][1]
+			while word_len < min and word_len > max:
+				split_words_pos[index][1] += split_words_pos[index+1][1]
+				index += 1
+			start = split_words_pos[index][0]
+			end = start + split_words_pos[index][1]
+			word_char_list = f.recognize(charlist[start, end], input_data.full_list)
+			word = ''.join(word_char_list).encode('utf8')
+			addresssc = {}
+			for i in addresss:
+				x = i.getdata()
+				sim = tools.levenshtein(word, x)
+				addresssc[sim] = x
+			address = addresssc[max(addresssc.keys())]
+			path.append(address)
+			index += 1
 		result = ''.join(path[1:]).encode('utf8')
 	except:
 		result = full_result
